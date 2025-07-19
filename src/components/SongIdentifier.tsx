@@ -80,6 +80,134 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
             year: 1982,
             genre: "Rock"
           }
+        } else if (lowerText.includes('dark knight') || lowerText.includes('batman')) {
+          songInfo = {
+            title: "Why So Serious?",
+            artist: "Hans Zimmer",
+            album: "The Dark Knight (Original Motion Picture Soundtrack)",
+            year: 2008,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('star wars')) {
+          songInfo = {
+            title: "Star Wars Main Theme",
+            artist: "John Williams",
+            album: "Star Wars: A New Hope (Original Soundtrack)",
+            year: 1977,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('jaws')) {
+          songInfo = {
+            title: "Main Title (Theme from Jaws)",
+            artist: "John Williams",
+            album: "Jaws (Original Motion Picture Soundtrack)",
+            year: 1975,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('titanic')) {
+          songInfo = {
+            title: "My Heart Will Go On",
+            artist: "Celine Dion",
+            album: "Titanic: Music from the Motion Picture",
+            year: 1997,
+            genre: "Pop/Soundtrack"
+          }
+        } else if (lowerText.includes('inception')) {
+          songInfo = {
+            title: "Time",
+            artist: "Hans Zimmer",
+            album: "Inception (Music from the Motion Picture)",
+            year: 2010,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('pirates') || lowerText.includes('caribbean')) {
+          songInfo = {
+            title: "He's a Pirate",
+            artist: "Klaus Badelt",
+            album: "Pirates of the Caribbean: The Curse of the Black Pearl",
+            year: 2003,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('harry potter')) {
+          songInfo = {
+            title: "Hedwig's Theme",
+            artist: "John Williams",
+            album: "Harry Potter and the Philosopher's Stone",
+            year: 2001,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('lord of the rings') || lowerText.includes('lotr')) {
+          songInfo = {
+            title: "Concerning Hobbits",
+            artist: "Howard Shore",
+            album: "The Lord of the Rings: The Fellowship of the Ring",
+            year: 2001,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('avengers')) {
+          songInfo = {
+            title: "The Avengers",
+            artist: "Alan Silvestri",
+            album: "The Avengers (Original Motion Picture Soundtrack)",
+            year: 2012,
+            genre: "Soundtrack"
+          }
+        } else if (lowerText.includes('bohemian rhapsody')) {
+          songInfo = {
+            title: "Bohemian Rhapsody",
+            artist: "Queen",
+            album: "A Night at the Opera",
+            year: 1975,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('imagine')) {
+          songInfo = {
+            title: "Imagine",
+            artist: "John Lennon",
+            album: "Imagine",
+            year: 1971,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('billie jean')) {
+          songInfo = {
+            title: "Billie Jean",
+            artist: "Michael Jackson",
+            album: "Thriller",
+            year: 1983,
+            genre: "Pop"
+          }
+        } else if (lowerText.includes('sweet child')) {
+          songInfo = {
+            title: "Sweet Child O' Mine",
+            artist: "Guns N' Roses",
+            album: "Appetite for Destruction",
+            year: 1987,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('wonderwall')) {
+          songInfo = {
+            title: "Wonderwall",
+            artist: "Oasis",
+            album: "(What's the Story) Morning Glory?",
+            year: 1995,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('hotel california')) {
+          songInfo = {
+            title: "Hotel California",
+            artist: "Eagles",
+            album: "Hotel California",
+            year: 1976,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('stairway to heaven')) {
+          songInfo = {
+            title: "Stairway to Heaven",
+            artist: "Led Zeppelin",
+            album: "Led Zeppelin IV",
+            year: 1971,
+            genre: "Rock"
+          }
         }
         // Add more patterns as needed
         
