@@ -78,13 +78,31 @@ async function handleTranscribe(request: Request, env: Env, corsHeaders: any): P
     // Convert audio file to array buffer
     const audioBuffer = await file.arrayBuffer()
     
-    // Whisper expects audio data as an array of numbers
-    const audioArray = Array.from(new Uint8Array(audioBuffer))
+    console.log('Audio buffer size:', audioBuffer.byteLength)
+    
+    // Check if audio is too large (Whisper has limits)
+    const MAX_AUDIO_SIZE = 25 * 1024 * 1024 // 25MB
+    if (audioBuffer.byteLength > MAX_AUDIO_SIZE) {
+      return new Response(JSON.stringify({ 
+        error: 'Audio file too large',
+        message: `Audio size ${audioBuffer.byteLength} bytes exceeds maximum of ${MAX_AUDIO_SIZE} bytes`
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
     
     console.log('Calling Whisper API...')
     
-    // Use Whisper model to transcribe
-    const response = await env.AI.run('@cf/openai/whisper-large-v3-turbo', {
+    // Convert to Uint8Array and then to regular array
+    // Whisper expects an array of 8-bit unsigned integers
+    const uint8Array = new Uint8Array(audioBuffer)
+    const audioArray = [...uint8Array]
+    
+    console.log('Audio array length:', audioArray.length)
+    
+    // Use the correct Whisper model name
+    const response = await env.AI.run('@cf/openai/whisper', {
       audio: audioArray,
     })
 
@@ -249,7 +267,7 @@ async function handleTestAI(request: Request, env: Env, corsHeaders: any): Promi
     return new Response(JSON.stringify({ 
       aiBindingExists: true,
       testResponse,
-      availableModels: ['whisper-large-v3-turbo', 'qwq-32b-preview', 'flux-1-schnell']
+      availableModels: ['@cf/openai/whisper', '@cf/qwen/qwq-32b-preview', '@cf/black-forest-labs/flux-1-schnell']
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
