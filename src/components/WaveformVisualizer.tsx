@@ -7,9 +7,9 @@ interface WaveformVisualizerProps {
 
 const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ stream }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationIdRef = useRef<number>()
-  const audioContextRef = useRef<AudioContext>()
-  const analyserRef = useRef<AnalyserNode>()
+  const animationIdRef = useRef<number | undefined>(undefined)
+  const audioContextRef = useRef<AudioContext | undefined>(undefined)
+  const analyserRef = useRef<AnalyserNode | undefined>(undefined)
 
   useEffect(() => {
     if (!stream || !canvasRef.current) return

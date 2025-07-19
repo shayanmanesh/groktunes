@@ -12,7 +12,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
   const [audioURL, setAudioURL] = useState<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
       mediaRecorder.start()
       setIsRecording(true)
       
-      timerRef.current = setInterval(() => {
+      timerRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1)
       }, 1000)
     } catch (error) {

@@ -7,7 +7,6 @@ interface SongIdentifierProps {
 }
 
 const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdentified }) => {
-  const [isIdentifying, setIsIdentifying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [status, setStatus] = useState('Preparing audio...')
 
@@ -16,7 +15,6 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
   }, [audioBlob])
 
   const identifySong = async () => {
-    setIsIdentifying(true)
     
     try {
       // Simulate different stages of identification
