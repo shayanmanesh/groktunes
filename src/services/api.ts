@@ -50,16 +50,26 @@ export class GrokTunesAPI {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'audio.webm')
 
+    console.log('Transcribing audio...', {
+      size: audioBlob.size,
+      type: audioBlob.type,
+      apiUrl: `${API_BASE_URL}/api/transcribe`
+    })
+
     const response = await fetch(`${API_BASE_URL}/api/transcribe`, {
       method: 'POST',
       body: formData
     })
 
     if (!response.ok) {
-      throw new Error('Failed to transcribe audio')
+      const errorText = await response.text()
+      console.error('Transcription failed:', response.status, errorText)
+      throw new Error(`Failed to transcribe audio: ${response.status} ${errorText}`)
     }
 
-    return response.json()
+    const result = await response.json()
+    console.log('Transcription result:', result)
+    return result
   }
 
   static async analyzeSong(transcription: string, songData?: any): Promise<AnalysisResult> {

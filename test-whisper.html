@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Whisper API</title>
+</head>
+<body>
+    <h1>Test Whisper Audio Transcription</h1>
+    <button id="recordBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <div id="status"></div>
+    <div id="result"></div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const API_URL = 'https://groktunes-api.apexdynamics-enterprise.workers.dev';
+
+        document.getElementById('recordBtn').addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioChunks = [];
+                
+                document.getElementById('status').textContent = 'Sending to API...';
+                
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'test.webm');
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/transcribe`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    document.getElementById('result').innerHTML = `
+                        <h3>Result:</h3>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    document.getElementById('result').innerHTML = `
+                        <h3>Error:</h3>
+                        <pre>${error.message}</pre>
+                    `;
+                }
+            };
+            
+            mediaRecorder.start();
+            document.getElementById('recordBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('status').textContent = 'Recording...';
+        });
+        
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            document.getElementById('recordBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('status').textContent = 'Processing...';
+        });
+    </script>
+</body>
+</html>

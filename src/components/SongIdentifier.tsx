@@ -69,9 +69,14 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
       setStatus('Song identified!')
       
       onSongIdentified(mockSong)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error identifying song:', error)
-      setStatus('Failed to identify song')
+      console.error('Error details:', error.message)
+      if (error.response) {
+        console.error('Response status:', error.response.status)
+        console.error('Response data:', error.response.data)
+      }
+      setStatus(`Failed to identify song: ${error.message || 'Unknown error'}`)
     }
   }
 

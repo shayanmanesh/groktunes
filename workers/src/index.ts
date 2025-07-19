@@ -36,6 +36,9 @@ export default {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
         
+        case '/api/test-ai':
+          return handleTestAI(request, env, corsHeaders)
+        
         default:
           return new Response('Not Found', { status: 404, headers: corsHeaders })
       }
@@ -65,27 +68,48 @@ async function handleTranscribe(request: Request, env: Env, corsHeaders: any): P
       })
     }
 
+    const file = audioFile as File
+    console.log('Received audio file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })
+
     // Convert audio file to array buffer
-    const audioBuffer = await (audioFile as File).arrayBuffer()
+    const audioBuffer = await file.arrayBuffer()
     
-    // Convert to base64 for Whisper (it expects base64 encoded audio)
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)))
+    // Whisper expects audio data as an array of numbers
+    const audioArray = Array.from(new Uint8Array(audioBuffer))
+    
+    console.log('Calling Whisper API...')
     
     // Use Whisper model to transcribe
     const response = await env.AI.run('@cf/openai/whisper-large-v3-turbo', {
-      audio: audioBase64,
+      audio: audioArray,
     })
 
+    console.log('Whisper response:', response)
+
     return new Response(JSON.stringify({
-      text: response.text,
+      text: response.text || '',
       language: response.language,
-      segments: response.segments
+      segments: response.segments,
+      // Include debug info
+      debug: {
+        audioSize: file.size,
+        audioType: file.type,
+        responseType: typeof response
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Transcription error:', error)
-    return new Response(JSON.stringify({ error: 'Transcription failed' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Transcription failed',
+      message: error.message || 'Unknown error',
+      stack: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -197,6 +221,43 @@ async function handleGenerateVisual(request: Request, env: Env, corsHeaders: any
   } catch (error) {
     console.error('Visual generation error:', error)
     return new Response(JSON.stringify({ error: 'Visual generation failed' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+}
+
+async function handleTestAI(request: Request, env: Env, corsHeaders: any): Promise<Response> {
+  try {
+    // Test if AI binding exists
+    if (!env.AI) {
+      return new Response(JSON.stringify({ 
+        error: 'AI binding not found',
+        env: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Test with a simple text generation
+    const testResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [{ role: 'user', content: 'Say hello' }],
+      max_tokens: 10
+    })
+
+    return new Response(JSON.stringify({ 
+      aiBindingExists: true,
+      testResponse,
+      availableModels: ['whisper-large-v3-turbo', 'qwq-32b-preview', 'flux-1-schnell']
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  } catch (error: any) {
+    return new Response(JSON.stringify({ 
+      error: 'AI test failed',
+      message: error.message
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

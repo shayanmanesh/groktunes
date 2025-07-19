@@ -30,9 +30,20 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-      const mediaRecorder = new MediaRecorder(stream)
+      
+      // Try to use a specific codec for better compatibility
+      let options: MediaRecorderOptions = {}
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        options = { mimeType: 'audio/webm;codecs=opus' }
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        options = { mimeType: 'audio/webm' }
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, options)
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
+
+      console.log('Recording with mimeType:', mediaRecorder.mimeType)
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -41,7 +52,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const mimeType = mediaRecorder.mimeType || 'audio/webm'
+        const blob = new Blob(chunksRef.current, { type: mimeType })
+        console.log('Created audio blob:', {
+          size: blob.size,
+          type: blob.type
+        })
+        
         const url = URL.createObjectURL(blob)
         setAudioURL(url)
         onAudioCapture(blob)
@@ -49,7 +66,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
         stream.getTracks().forEach(track => track.stop())
       }
 
-      mediaRecorder.start()
+      mediaRecorder.start(100) // Capture data every 100ms
       setIsRecording(true)
       
       timerRef.current = window.setInterval(() => {
