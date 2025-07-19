@@ -10,6 +10,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [audioURL, setAudioURL] = useState<string | null>(null)
+  const [textDescription, setTextDescription] = useState('')
+  const [inputMode, setInputMode] = useState<'audio' | 'text'>('audio')
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<number | null>(null)
@@ -102,6 +104,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleTextSubmit = () => {
+    if (textDescription.trim()) {
+      // Create a fake audio blob with the text description
+      const textBlob = new Blob([textDescription], { type: 'text/plain' })
+      // Add a custom property to indicate this is text
+      ;(textBlob as any).isTextDescription = true
+      ;(textBlob as any).textContent = textDescription
+      onAudioCapture(textBlob)
+    }
+  }
+
   return (
     <div className="audio-recorder">
       <div className="recorder-header">
@@ -112,11 +125,28 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
       </div>
 
       <div className="recorder-container">
-        {streamRef.current && isRecording && (
-          <WaveformVisualizer stream={streamRef.current} />
-        )}
+        <div className="input-mode-selector">
+          <button 
+            className={`mode-btn ${inputMode === 'audio' ? 'active' : ''}`}
+            onClick={() => setInputMode('audio')}
+          >
+            🎤 Record Audio
+          </button>
+          <button 
+            className={`mode-btn ${inputMode === 'text' ? 'active' : ''}`}
+            onClick={() => setInputMode('text')}
+          >
+            📝 Describe Song
+          </button>
+        </div>
 
-        <div className="recorder-controls">
+        {inputMode === 'audio' ? (
+          <>
+            {streamRef.current && isRecording && (
+              <WaveformVisualizer stream={streamRef.current} />
+            )}
+
+            <div className="recorder-controls">
           {!isRecording && !audioURL && (
             <button className="record-btn start" onClick={startRecording}>
               <span className="record-icon">🎤</span>
@@ -151,6 +181,25 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioCapture }) => {
             </div>
           )}
         </div>
+          </>
+        ) : (
+          <div className="text-input-container">
+            <textarea
+              className="text-description-input"
+              placeholder="Describe the song... e.g., 'Rocky theme song with trumpets' or 'That 80s song that goes dun dun dun'"
+              value={textDescription}
+              onChange={(e) => setTextDescription(e.target.value)}
+              rows={4}
+            />
+            <button 
+              className="action-btn primary"
+              onClick={handleTextSubmit}
+              disabled={!textDescription.trim()}
+            >
+              <span>🔍</span> Identify Song
+            </button>
+          </div>
+        )}
 
         <div className="recorder-tips">
           <h3>Tips for Better Results:</h3>

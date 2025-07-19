@@ -18,29 +18,56 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
   const identifySong = async () => {
     
     try {
-      // Step 1: Transcribe audio
-      setProgress(20)
-      setStatus('Converting audio to patterns...')
-      const transcription = await GrokTunesAPI.transcribeAudio(audioBlob)
+      let transcriptionText = ''
       
-      // Step 2: Analyze the transcription
-      setProgress(40)
-      setStatus('Analyzing melody contour...')
+      // Check if this is a text description or audio
+      if ((audioBlob as any).isTextDescription) {
+        // Use the text description directly
+        transcriptionText = (audioBlob as any).textContent
+        setProgress(40)
+        setStatus('Processing song description...')
+      } else {
+        // Step 1: Transcribe audio
+        setProgress(20)
+        setStatus('Converting audio to patterns...')
+        const transcription = await GrokTunesAPI.transcribeAudio(audioBlob)
+        transcriptionText = transcription.text || ''
+      }
       
-      // For now, use the transcription to search (in a real app, you'd match against a database)
+      // Step 2: Use QwQ to identify the song from the description
       setProgress(60)
-      setStatus('Matching against music database...')
+      setStatus('Analyzing song description...')
       
-      // Mock song data based on transcription
-      const mockSong = {
-        title: transcription.text || "Unknown Song",
+      let songInfo = {
+        title: "Unknown Song",
         artist: "Unknown Artist",
         album: "Unknown Album",
         year: 2024,
-        genre: "Unknown",
-        confidence: 85,
+        genre: "Unknown"
+      }
+      
+      // If we have a description, use QwQ to identify the song
+      if (transcriptionText) {
+        try {
+          const identifyPrompt = `Based on this description: "${transcriptionText}", identify the song. If it mentions specific song names, artists, or recognizable lyrics/melodies, provide the exact song information. For instrumental descriptions like "Rocky theme" or "trumpet fanfare", identify the specific piece. Return a JSON object with: title, artist, album, year, genre.`
+          
+          const identifyResponse = await GrokTunesAPI.analyzeSong(identifyPrompt, {})
+          console.log('Identify response:', identifyResponse)
+          
+          // Try to parse the response
+          if (typeof identifyResponse === 'object' && identifyResponse.title) {
+            songInfo = identifyResponse
+          }
+        } catch (error) {
+          console.error('Failed to identify song:', error)
+        }
+      }
+      
+      const mockSong = {
+        ...songInfo,
+        confidence: transcriptionText ? 75 : 50,
         coverUrl: "https://via.placeholder.com/300x300/4a5568/ffffff?text=Music",
-        transcription: transcription.text,
+        transcription: transcriptionText,
         preview: {
           spotify: "#",
           youtube: "#",
@@ -59,7 +86,7 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
       
       // Get AI analysis
       try {
-        const analysis = await GrokTunesAPI.analyzeSong(transcription.text || '', mockSong)
+        const analysis = await GrokTunesAPI.analyzeSong(transcriptionText || '', mockSong)
         mockSong.metadata.mood = analysis.emotional_profile?.primary || "Unknown"
       } catch (error) {
         console.error('Analysis failed:', error)
