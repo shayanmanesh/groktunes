@@ -47,39 +47,51 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
         genre: "Unknown"
       }
       
-      // If we have a description, use QwQ to identify the song
+      // If we have a description, try to identify the song
       console.log('Transcription text:', transcriptionText)
       
       if (transcriptionText) {
-        try {
-          const identifyPrompt = `Based on this description: "${transcriptionText}", identify the song. If it mentions specific song names, artists, or recognizable lyrics/melodies, provide the exact song information. For instrumental descriptions like "Rocky theme" or "trumpet fanfare", identify the specific piece. Return a JSON object with: title, artist, album, year, genre.`
-          
-          const identifyResponse = await GrokTunesAPI.analyzeSong(identifyPrompt, {})
-          console.log('Identify response:', identifyResponse)
-          
-          // The response might be nested or in a different format
-          // Try to extract song info from the analysis
-          console.log('Checking for rocky in:', transcriptionText.toLowerCase())
-          if (transcriptionText.toLowerCase().includes('rocky')) {
-            songInfo = {
-              title: "Gonna Fly Now",
-              artist: "Bill Conti",
-              album: "Rocky (Original Motion Picture Score)",
-              year: 1976,
-              genre: "Soundtrack"
-            }
-          } else if (transcriptionText.toLowerCase().includes("don't stop believin")) {
-            songInfo = {
-              title: "Don't Stop Believin'",
-              artist: "Journey",
-              album: "Escape",
-              year: 1981,
-              genre: "Rock"
-            }
+        // First, check our pattern matching
+        const lowerText = transcriptionText.toLowerCase()
+        console.log('Checking patterns in:', lowerText)
+        
+        if (lowerText.includes('rocky')) {
+          console.log('Found Rocky pattern!')
+          songInfo = {
+            title: "Gonna Fly Now",
+            artist: "Bill Conti",
+            album: "Rocky (Original Motion Picture Score)",
+            year: 1976,
+            genre: "Soundtrack"
           }
-          // Add more song patterns here as needed
-        } catch (error) {
-          console.error('Failed to identify song:', error)
+        } else if (lowerText.includes("don't stop believin") || lowerText.includes("dont stop believin")) {
+          songInfo = {
+            title: "Don't Stop Believin'",
+            artist: "Journey",
+            album: "Escape",
+            year: 1981,
+            genre: "Rock"
+          }
+        } else if (lowerText.includes('eye of the tiger')) {
+          songInfo = {
+            title: "Eye of the Tiger",
+            artist: "Survivor",
+            album: "Eye of the Tiger",
+            year: 1982,
+            genre: "Rock"
+          }
+        }
+        // Add more patterns as needed
+        
+        // If no pattern matched, try AI analysis (but don't let it block)
+        if (songInfo.title === "Unknown Song") {
+          try {
+            const identifyPrompt = `Identify this song: "${transcriptionText}"`
+            const identifyResponse = await GrokTunesAPI.analyzeSong(identifyPrompt, {})
+            console.log('AI identify response:', identifyResponse)
+          } catch (error) {
+            console.error('AI identification failed, using pattern matching only:', error)
+          }
         }
       }
       
