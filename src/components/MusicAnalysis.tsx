@@ -20,27 +20,54 @@ const MusicAnalysis: React.FC<MusicAnalysisProps> = ({ song }) => {
         )
         
         // Parse the analysis result
-        const analysisData = typeof result === 'string' ? {
-          overview: {
-            catchiness: 7.5,
-            memorability: 8.0,
-            uniqueness: 7.0,
-            popularity: 7.5
-          },
-          theory: {
-            structure: result.structure?.pattern || "Unknown structure",
-            keyChanges: result.structure?.key_changes || "No key changes detected",
-            chord_progression: result.structure?.chord_progression || "Unknown progression",
-            hooks: result.catchiness?.reasons || ["AI analysis in progress"]
-          },
-          emotion: {
-            primary: result.emotional_profile?.primary || "Unknown",
-            secondary: result.emotional_profile?.secondary || [],
-            energy_curve: result.emotional_profile?.energy_curve || [0.5, 0.5, 0.5, 0.5],
-            cultural_impact: result.cultural_impact || "Analysis in progress"
-          },
-          similar_songs: result.similar_songs || []
-        } : result
+        let analysisData: any
+        if (typeof result === 'string') {
+          // If the AI returns a string, use default values
+          analysisData = {
+            overview: {
+              catchiness: 7.5,
+              memorability: 8.0,
+              uniqueness: 7.0,
+              popularity: 7.5
+            },
+            theory: {
+              structure: "Unknown structure",
+              keyChanges: "No key changes detected",
+              chord_progression: "Unknown progression",
+              hooks: ["AI analysis in progress"]
+            },
+            emotion: {
+              primary: "Unknown",
+              secondary: [],
+              energy_curve: [0.5, 0.5, 0.5, 0.5],
+              cultural_impact: "Analysis in progress"
+            },
+            similar_songs: []
+          }
+        } else {
+          // If it's an object, use the actual values
+          analysisData = {
+            overview: {
+              catchiness: result.catchiness?.score || 7.5,
+              memorability: 8.0,
+              uniqueness: 7.0,
+              popularity: 7.5
+            },
+            theory: {
+              structure: result.structure?.pattern || "Unknown structure",
+              keyChanges: result.structure?.key_changes || "No key changes detected",
+              chord_progression: result.structure?.chord_progression || "Unknown progression",
+              hooks: result.catchiness?.reasons || ["AI analysis in progress"]
+            },
+            emotion: {
+              primary: result.emotional_profile?.primary || "Unknown",
+              secondary: result.emotional_profile?.secondary || [],
+              energy_curve: result.emotional_profile?.energy_curve || [0.5, 0.5, 0.5, 0.5],
+              cultural_impact: result.cultural_impact || "Analysis in progress"
+            },
+            similar_songs: result.similar_songs || []
+          }
+        }
         
         setAnalysis(analysisData)
       } catch (error) {
