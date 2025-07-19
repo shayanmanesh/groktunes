@@ -56,21 +56,24 @@ async function handleTranscribe(request: Request, env: Env, corsHeaders: any): P
 
   try {
     const formData = await request.formData()
-    const audioFile = formData.get('audio') as File
+    const audioFile = formData.get('audio')
     
-    if (!audioFile) {
-      return new Response(JSON.stringify({ error: 'No audio file provided' }), {
+    if (!audioFile || typeof audioFile === 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid audio file' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     // Convert audio file to array buffer
-    const audioBuffer = await audioFile.arrayBuffer()
+    const audioBuffer = await (audioFile as File).arrayBuffer()
+    
+    // Convert to base64 for Whisper (it expects base64 encoded audio)
+    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)))
     
     // Use Whisper model to transcribe
     const response = await env.AI.run('@cf/openai/whisper-large-v3-turbo', {
-      audio: [...new Uint8Array(audioBuffer)],
+      audio: audioBase64,
     })
 
     return new Response(JSON.stringify({
@@ -95,15 +98,15 @@ async function handleAnalyze(request: Request, env: Env, corsHeaders: any): Prom
   }
 
   try {
-    const { transcription, songData } = await request.json()
+    const data = await request.json() as { transcription: string; songData: any }
     
     // Use QwQ model for music analysis
     const prompt = `
 You are a music analysis AI. Analyze the following song information and provide insights:
 
-Song: ${songData?.title || 'Unknown'}
-Artist: ${songData?.artist || 'Unknown'}
-Transcription/Humming Pattern: ${transcription}
+Song: ${data.songData?.title || 'Unknown'}
+Artist: ${data.songData?.artist || 'Unknown'}
+Transcription/Humming Pattern: ${data.transcription}
 
 Please provide:
 1. Why this song is catchy (musical hooks, patterns)
@@ -144,15 +147,15 @@ async function handleGenerateRemix(request: Request, env: Env, corsHeaders: any)
   }
 
   try {
-    const { songData, style } = await request.json()
+    const data = await request.json() as { songData: any; style: string }
     
     // For MVP, return mock data
     // In production, this would use MeloTTS
-    const mockRemixUrl = `https://example.com/remix/${style}/${Date.now()}.mp3`
+    const mockRemixUrl = `https://example.com/remix/${data.style}/${Date.now()}.mp3`
     
     return new Response(JSON.stringify({
       remixUrl: mockRemixUrl,
-      style: style,
+      style: data.style,
       duration: '3:45'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -172,10 +175,10 @@ async function handleGenerateVisual(request: Request, env: Env, corsHeaders: any
   }
 
   try {
-    const { prompt, style } = await request.json()
+    const data = await request.json() as { prompt: string; style: string }
     
     // Use FLUX model to generate visuals
-    const visualPrompt = `${prompt}, ${style} style, album cover art, high quality, artistic`
+    const visualPrompt = `${data.prompt}, ${data.style} style, album cover art, high quality, artistic`
     
     const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
       prompt: visualPrompt,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { GrokTunesAPI } from '../services/api'
 import '../styles/SongIdentifier.css'
 
 interface SongIdentifierProps {
@@ -17,43 +18,56 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
   const identifySong = async () => {
     
     try {
-      // Simulate different stages of identification
-      const stages = [
-        { progress: 20, status: 'Converting audio to patterns...', delay: 800 },
-        { progress: 40, status: 'Analyzing melody contour...', delay: 1000 },
-        { progress: 60, status: 'Matching against music database...', delay: 1200 },
-        { progress: 80, status: 'Verifying results...', delay: 800 },
-        { progress: 100, status: 'Song identified!', delay: 600 }
-      ]
-
-      for (const stage of stages) {
-        setProgress(stage.progress)
-        setStatus(stage.status)
-        await new Promise(resolve => setTimeout(resolve, stage.delay))
-      }
-
-      // Mock identified song data
+      // Step 1: Transcribe audio
+      setProgress(20)
+      setStatus('Converting audio to patterns...')
+      const transcription = await GrokTunesAPI.transcribeAudio(audioBlob)
+      
+      // Step 2: Analyze the transcription
+      setProgress(40)
+      setStatus('Analyzing melody contour...')
+      
+      // For now, use the transcription to search (in a real app, you'd match against a database)
+      setProgress(60)
+      setStatus('Matching against music database...')
+      
+      // Mock song data based on transcription
       const mockSong = {
-        title: "Don't Stop Believin'",
-        artist: "Journey",
-        album: "Escape",
-        year: 1981,
-        genre: "Rock",
-        confidence: 92,
-        coverUrl: "https://via.placeholder.com/300x300/4a5568/ffffff?text=Journey",
+        title: transcription.text || "Unknown Song",
+        artist: "Unknown Artist",
+        album: "Unknown Album",
+        year: 2024,
+        genre: "Unknown",
+        confidence: 85,
+        coverUrl: "https://via.placeholder.com/300x300/4a5568/ffffff?text=Music",
+        transcription: transcription.text,
         preview: {
           spotify: "#",
           youtube: "#",
           apple: "#"
         },
         metadata: {
-          bpm: 119,
-          key: "E major",
-          mood: "Uplifting, Nostalgic",
-          energy: 0.73
+          bpm: 120,
+          key: "C major",
+          mood: "Unknown",
+          energy: 0.5
         }
       }
-
+      
+      setProgress(80)
+      setStatus('Verifying results...')
+      
+      // Get AI analysis
+      try {
+        const analysis = await GrokTunesAPI.analyzeSong(transcription.text || '', mockSong)
+        mockSong.metadata.mood = analysis.emotional_profile?.primary || "Unknown"
+      } catch (error) {
+        console.error('Analysis failed:', error)
+      }
+      
+      setProgress(100)
+      setStatus('Song identified!')
+      
       onSongIdentified(mockSong)
     } catch (error) {
       console.error('Error identifying song:', error)

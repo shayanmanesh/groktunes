@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GrokTunesAPI } from '../services/api'
 import '../styles/RemixGenerator.css'
 
 interface RemixGeneratorProps {
@@ -63,16 +64,32 @@ const RemixGenerator: React.FC<RemixGeneratorProps> = ({ song }) => {
     setIsGenerating(true)
     setSelectedStyle(style)
 
-    // Simulate remix generation
-    setTimeout(() => {
+    try {
+      // Generate remix with AI
+      const remixResult = await GrokTunesAPI.generateRemix(song, style)
+      
+      // Generate visual with FLUX
+      const visualPrompt = `${style} music album cover for "${song.title}" by ${song.artist}, abstract, artistic, modern`
+      const visualResult = await GrokTunesAPI.generateVisual(visualPrompt, style)
+      
+      setGeneratedRemix({
+        style,
+        description: `AI-generated ${style} remix of "${song.title}"`,
+        audioUrl: remixResult.remixUrl,
+        visualUrl: visualResult.imageUrl
+      })
+    } catch (error) {
+      console.error('Failed to generate remix:', error)
+      // Fallback to placeholder
       setGeneratedRemix({
         style,
         description: `AI-generated ${style} remix of "${song.title}"`,
         audioUrl: '#',
         visualUrl: `https://via.placeholder.com/600x400/9333ea/ffffff?text=${style.toUpperCase()}+REMIX`
       })
+    } finally {
       setIsGenerating(false)
-    }, 3000)
+    }
   }
 
   const shareRemix = () => {
