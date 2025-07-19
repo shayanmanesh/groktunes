@@ -24,6 +24,7 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
       if ((audioBlob as any).isTextDescription) {
         // Use the text description directly
         transcriptionText = (audioBlob as any).textContent
+        console.log('Processing text description:', transcriptionText)
         setProgress(40)
         setStatus('Processing song description...')
       } else {
@@ -47,6 +48,8 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
       }
       
       // If we have a description, use QwQ to identify the song
+      console.log('Transcription text:', transcriptionText)
+      
       if (transcriptionText) {
         try {
           const identifyPrompt = `Based on this description: "${transcriptionText}", identify the song. If it mentions specific song names, artists, or recognizable lyrics/melodies, provide the exact song information. For instrumental descriptions like "Rocky theme" or "trumpet fanfare", identify the specific piece. Return a JSON object with: title, artist, album, year, genre.`
@@ -56,6 +59,7 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
           
           // The response might be nested or in a different format
           // Try to extract song info from the analysis
+          console.log('Checking for rocky in:', transcriptionText.toLowerCase())
           if (transcriptionText.toLowerCase().includes('rocky')) {
             songInfo = {
               title: "Gonna Fly Now",
@@ -78,6 +82,8 @@ const SongIdentifier: React.FC<SongIdentifierProps> = ({ audioBlob, onSongIdenti
           console.error('Failed to identify song:', error)
         }
       }
+      
+      console.log('Final songInfo:', songInfo)
       
       const mockSong = {
         ...songInfo,
